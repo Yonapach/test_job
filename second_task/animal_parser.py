@@ -13,6 +13,7 @@ class AnimalParser:
         page = requests.get(self.url).text
         print('Searching...')
         self.recursive_search(page)
+        print('Done!')
 
     def recursive_search(self, page):
         soup = BeautifulSoup(page, 'lxml')
