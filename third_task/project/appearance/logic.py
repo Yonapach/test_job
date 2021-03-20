@@ -1,10 +1,10 @@
-def get_interval_from_list(lst: list) -> list:
+def get_intervals_from_list(lst: list) -> list:
     return list(zip(lst[::2], lst[1::2]))
 
 
 def get_joint_interval(t1: tuple, t2: tuple) -> tuple:
-    start = t2[0] if t1[0] <= t2[0] else t1[0]
-    end = t1[1] if t1[1] <= t2[1] else t2[1]
+    start = max(t1[0], t2[0])
+    end = min(t1[1], t2[1])
     return (start, end) if start <= end else None
 
 
@@ -13,7 +13,7 @@ def get_all_joint_intervals(l1: list, l2: list) -> list:
     for i1 in l1:
         for i2 in l2:
             joint_interval = get_joint_interval(i1, i2)
-            if joint_interval is not None:
+            if joint_interval:
                 joint_intervals.append(joint_interval)
     return joint_intervals
 
@@ -32,10 +32,10 @@ def get_total_crossing_time(lst: list) -> int:
     return total_time
 
 
-def appearance(intervals: dict):
-    joint_intervals = get_interval_from_list(intervals['lesson'])
-    for intervals_ in (intervals['pupil'], intervals['tutor']):
-        intervals_ = get_interval_from_list(intervals_)
-        joint_intervals = get_all_joint_intervals(joint_intervals, intervals_)
+def appearance(data: dict) -> int:
+    joint_intervals = get_intervals_from_list(data['lesson'])
+    for intervals in (data['pupil'], data['tutor']):
+        intervals = get_intervals_from_list(intervals)
+        joint_intervals = get_all_joint_intervals(joint_intervals, intervals)
 
     return get_total_crossing_time(joint_intervals)
