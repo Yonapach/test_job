@@ -10,12 +10,13 @@ class AnimalParser:
 
     def find_names(self):
         self.names.clear()
-        page = requests.get(self.url).text
         print('Searching...')
-        self.recursive_search(page)
+        with requests.Session() as session:
+            self.recursive_search(self.url, session)
         print('Done!')
 
-    def recursive_search(self, page):
+    def recursive_search(self, url, session):
+        page = session.get(url).text
         soup = BeautifulSoup(page, 'lxml')
         category_groups = soup.find('div', class_='mw-category').findAll('div', class_='mw-category-group')
         for category_group in category_groups:
@@ -30,8 +31,7 @@ class AnimalParser:
         for a in links:
             if a.text == 'Следующая страница':
                 url = 'https://ru.wikipedia.org/' + a.get('href')
-                page = requests.get(url).text
-        self.recursive_search(page)
+        self.recursive_search(url, session)
 
     def print_result(self):
         for key in sorted(self.names):
