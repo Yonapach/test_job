@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-import re
+from string import ascii_letters
 
 
 class AnimalParser:
@@ -8,30 +8,31 @@ class AnimalParser:
         self.names = {}
         self.url = "https://ru.wikipedia.org/w/index.php?title=Категория:Животные_по_алфавиту"
 
+    def get_soups(self):
+        url = self.url
+        with requests.Session() as session:
+            while url:
+                page = session.get(url).text
+                soup = BeautifulSoup(page, 'lxml')
+                next_page = soup.find('div', id='mw-pages').find('a', text='Следующая страница')
+                url = 'https://ru.wikipedia.org/' + next_page.get('href') if next_page else None
+                yield soup
+
     def find_names(self):
         self.names.clear()
         print('Searching...')
-        with requests.Session() as session:
-            self.recursive_search(self.url, session)
-        print('Done!')
 
-    def recursive_search(self, url, session):
-        page = session.get(url).text
-        soup = BeautifulSoup(page, 'lxml')
-        category_groups = soup.find('div', class_='mw-category').findAll('div', class_='mw-category-group')
-        for category_group in category_groups:
-            char = category_group.find('h3').text
-            is_cyrillic = bool(re.match('[А-Я]', char))
-            if not is_cyrillic:
-                return
-            names = [name.text for name in category_group.find_all('a')]
-            self.names[char] = self.names[char] + names if self.names.get(char) else names
-
-        links = soup.find('div', id='mw-pages').find_all('a')
-        for a in links:
-            if a.text == 'Следующая страница':
-                url = 'https://ru.wikipedia.org/' + a.get('href')
-        self.recursive_search(url, session)
+        soups = self.get_soups()
+        for soup in soups:
+            categories = soup.find('div', class_='mw-category')
+            category_groups = categories.findAll('div', class_='mw-category-group')
+            for category_group in category_groups:
+                char = category_group.find('h3').text
+                if char in ascii_letters:
+                    print('Done!')
+                    return
+                names = [name.text for name in category_group.find_all('a')]
+                self.names[char] = self.names[char] + names if self.names.get(char) else names
 
     def print_result(self):
         for key in sorted(self.names):
