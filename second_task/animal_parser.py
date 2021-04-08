@@ -32,7 +32,7 @@ class AnimalParser:
                     print('Done!')
                     return
                 names = [name.text for name in category_group.find_all('a')]
-                self.names[char] = self.names[char] + names if self.names.get(char) else names
+                self.names[char] = self.names[char] + names if char in self.names else names
 
     def print_result(self):
         for key in sorted(self.names):
